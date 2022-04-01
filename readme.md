@@ -14,4 +14,4 @@ If you want to continue working on this project make sure to check the [project 
 
 Build the project with 'dotnet publish' for automatic deployment.
 
-If you are running into unresolved references during build you most likely did not configure the GameDir correctly forgot to run BepInEx once.
+If you are running into unresolved references during build you most likely did not configure the GameDir correctly or forgot to run BepInEx once.
