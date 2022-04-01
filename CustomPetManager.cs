@@ -23,8 +23,6 @@ namespace Zeprus.Sap {
             log.LogInfo("Asset: " + customPet.GetAsset());
             MinionConstants.Minions.Add(customPet.GetEnum(), customPet.GetTemplate());
             log.LogInfo("Minions.add passed");
-            //MinionConstants.PublicMinions.Add(customPet.GetTemplate());
-            //log.LogInfo("PublicMinions.add passed");
             log.LogInfo("Adding <" + customPet.GetEnum() + ", " + customPet.GetAsset() + "> to Dictionary");
             CustomMinionAssetDictionary.Add(customPet.GetEnum(), customPet.GetAsset());
             log.LogInfo("Found key " + customPet.GetEnum() + " " + CustomMinionAssetDictionary.ContainsKey(customPet.GetEnum()));
