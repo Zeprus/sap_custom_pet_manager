@@ -10,7 +10,7 @@ Check the [example implementation](https://github.com/Zeprus/sap_custom_pet_exam
 4. Move it to "Super Auto Pets\BepInEx\plugins\"
 
 ## Development
-If you want to continue working on this project make sure to check the [project file](https://github.com/Zeprus/sap_custom_pet_manager/blob/master/super_custom_pets.csproj) and set the GameDir property to the root directory of your Super Auto Pets installation.
+If you want to continue working on this project make sure to check the [project file](https://github.com/Zeprus/sap_custom_pet_manager/blob/master/custom_pet_manager.csproj) and set the GameDir property to the root directory of your Super Auto Pets installation.
 
 Build the project with 'dotnet publish' for automatic deployment.
 
