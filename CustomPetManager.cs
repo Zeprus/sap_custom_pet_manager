@@ -4,14 +4,16 @@ using UnityEngine;
 using HarmonyLib;
 using Spacewood.Core.Enums;
 using Spacewood.Unity;
+using Spacewood.Core.Models.Abilities;
 
 namespace Zeprus.Sap {
     public class CustomPetManager : MonoBehaviour {
         
         private static BepInEx.Logging.ManualLogSource log;
-
         private static Dictionary<MinionEnum, MinionAsset> CustomMinionAssetDictionary = new Dictionary<MinionEnum, MinionAsset>();
         private static Dictionary<MinionEnum, CustomPet> CustomPetDictionary = new Dictionary<MinionEnum, CustomPet>();
+        private static Dictionary<AbilityEnum, AbilityAsset> CustomAbilityAssetDictionary = new Dictionary<AbilityEnum, AbilityAsset>();
+        private static Dictionary<AbilityEnum, CustomAbilityCollection> CustomAbilityCollectionDictionary = new Dictionary<AbilityEnum, CustomAbilityCollection>();
         
         public CustomPetManager(IntPtr ptr) : base(ptr) {
             log = BepInExLoader.log;
@@ -49,17 +51,59 @@ namespace Zeprus.Sap {
         }
 
         private static void registerPet(CustomPet customPet) {
-            log.LogInfo("Registering pet: " + customPet + " " + customPet.GetEnum());
-            log.LogInfo("Template: " + customPet.GetTemplate());
-            log.LogInfo("Asset: " + customPet.GetAsset());
             MinionConstants.Minions.Add(customPet.GetEnum(), customPet.GetTemplate());
-            log.LogInfo("Minions.add passed");
-            log.LogInfo("Adding <" + customPet.GetEnum() + ", " + customPet.GetAsset() + "> to Dictionary");
             CustomMinionAssetDictionary.Add(customPet.GetEnum(), customPet.GetAsset());
-            log.LogInfo("Found key " + customPet.GetEnum() + " " + CustomMinionAssetDictionary.ContainsKey(customPet.GetEnum()));
-            log.LogInfo("Found key " + 184 + " " + CustomMinionAssetDictionary.ContainsKey((MinionEnum) 184));
+            log.LogInfo("Created custom pet '" + customPet.GetTemplate().Name + "' with ID " + customPet.GetEnum());
+        }
 
-            log.LogInfo("Created custom pet " + customPet.GetTemplate().Name + " with ID " + customPet.GetEnum());
+        public static CustomPet getCustomPet(MinionEnum minionEnum) {
+            return CustomPetDictionary[minionEnum];
+        }
+        #endregion
+
+        #region CustomAbility
+
+        public static CustomAbilityCollection CreateCustomAbilityCollection() {
+            AbilityEnum abilityEnum = createAbilityEnum();
+            AbilityCollection abilityCollection = createAbilityCollection(abilityEnum);
+            abilityCollection.AddAbility(createAbility(abilityEnum, 1));
+            abilityCollection.AddAbility(createAbility(abilityEnum, 2));
+            abilityCollection.AddAbility(createAbility(abilityEnum, 3));
+            AbilityAsset abilityAsset = createAbilityAsset(abilityEnum);
+            CustomAbilityCollection customAbilityCollection = new CustomAbilityCollection(abilityEnum, abilityCollection, abilityAsset);
+            registerCustomAbilityCollection(customAbilityCollection);
+            return customAbilityCollection;
+        }
+
+        private static AbilityEnum createAbilityEnum() {
+            return (AbilityEnum) (Enum.GetNames(typeof(AbilityEnum)).Length + CustomAbilityCollectionDictionary.Count + 1);
+        }
+
+        private static AbilityCollection createAbilityCollection(AbilityEnum abilityEnum) {
+            AbilityCollection abilityCollection = new AbilityCollection(abilityEnum);
+            return abilityCollection;
+        }
+
+
+        private static Ability createAbility(AbilityEnum abilityEnum, int level) {
+            Ability ability = new Ability(abilityEnum, level);
+            return ability;
+        }
+
+        private static AbilityAsset createAbilityAsset(AbilityEnum abilityEnum) {
+            AbilityAsset abilityAsset = ScriptableObject.CreateInstance<AbilityAsset>();
+            abilityAsset.Enum = abilityEnum;
+            return abilityAsset;
+        }
+
+        private static void registerCustomAbilityCollection(CustomAbilityCollection customAbilityCollection) {
+            CustomAbilityCollectionDictionary.Add(customAbilityCollection.GetEnum(), customAbilityCollection);
+            CustomAbilityAssetDictionary.Add(customAbilityCollection.GetEnum(), customAbilityCollection.GetAsset());
+            // AbilityConstants.abilityCollections.Add(customAbilityCollection.GetEnum(), customAbilityCollection.GetAbilityCollection());
+        }
+
+        public static CustomAbilityCollection getCustomAbilityCollection(AbilityEnum abilityEnum) {
+            return CustomAbilityCollectionDictionary[abilityEnum];
         }
         #endregion
 
@@ -68,7 +112,7 @@ namespace Zeprus.Sap {
         class CustomPetManagerHooks {
             [HarmonyPrefix]
             [HarmonyPatch(typeof(MinionLibrary), "Get")]
-            public static bool prefixGet(MinionEnum value, ref MinionAsset __result) {
+            public static bool prefixMinionLibraryGet(MinionEnum value, ref MinionAsset __result) {
                 // check if requested Assets are for a custom pet
                 if(CustomMinionAssetDictionary.ContainsKey(value)) {
                     // set return to our created MinionAsset
@@ -76,7 +120,27 @@ namespace Zeprus.Sap {
                     // prevent executing the regular MinionLibrary.Get function to avoid errors
                     return false;
                 } else {
-                    log.LogInfo("Didn't find key " + value);
+                    return true;
+                }
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(AbilityLibrary), "Get")]
+            public static bool prefixAbilityLibraryGet(AbilityEnum value, ref AbilityAsset __result) {
+                if(CustomAbilityAssetDictionary.ContainsKey(value)) {
+                    __result = CustomAbilityAssetDictionary[value];
+                    return false;
+                }
+                return true;
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(AbilityConstants), "GetAbility")]
+            public static bool prefixAbilityConstantsGetAbility(AbilityEnum @enum, int level, ref Ability __result) {
+                if(CustomAbilityCollectionDictionary.ContainsKey(@enum)) {
+                    __result = CustomAbilityCollectionDictionary[@enum].GetAbilityCollection().GetAbility(level);
+                    return false;
+                } else {
                     return true;
                 }
             }
