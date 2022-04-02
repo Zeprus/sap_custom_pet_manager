@@ -18,6 +18,7 @@ If you are running into unresolved references during build you most likely did n
 
 ## TODO:
 - Implement help with abilities
+  - fix ability-assets when hovering over the pet
 - Implement custom packs
 - Implement overwriting or deleting pets
 - Implement help with Assets
