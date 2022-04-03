@@ -22,3 +22,4 @@ If you are running into unresolved references during build you most likely did n
 - Implement custom packs
 - Implement overwriting or deleting pets
 - Implement help with Assets
+- Import pets from JSON
