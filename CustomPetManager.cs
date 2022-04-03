@@ -10,9 +10,7 @@ namespace Zeprus.Sap {
     public class CustomPetManager : MonoBehaviour {
         
         private static BepInEx.Logging.ManualLogSource log;
-        private static Dictionary<MinionEnum, MinionAsset> CustomMinionAssetDictionary = new Dictionary<MinionEnum, MinionAsset>();
         private static Dictionary<MinionEnum, CustomPet> CustomPetDictionary = new Dictionary<MinionEnum, CustomPet>();
-        private static Dictionary<AbilityEnum, AbilityAsset> CustomAbilityAssetDictionary = new Dictionary<AbilityEnum, AbilityAsset>();
         private static Dictionary<AbilityEnum, CustomAbilityCollection> CustomAbilityCollectionDictionary = new Dictionary<AbilityEnum, CustomAbilityCollection>();
         
         public CustomPetManager(IntPtr ptr) : base(ptr) {
@@ -52,7 +50,7 @@ namespace Zeprus.Sap {
 
         private static void registerPet(CustomPet customPet) {
             MinionConstants.Minions.Add(customPet.GetEnum(), customPet.GetTemplate());
-            CustomMinionAssetDictionary.Add(customPet.GetEnum(), customPet.GetAsset());
+            CustomPetDictionary.Add(customPet.GetEnum(), customPet);
             log.LogInfo("Created custom pet '" + customPet.GetTemplate().Name + "' with ID " + customPet.GetEnum());
         }
 
@@ -98,7 +96,6 @@ namespace Zeprus.Sap {
 
         private static void registerCustomAbilityCollection(CustomAbilityCollection customAbilityCollection) {
             CustomAbilityCollectionDictionary.Add(customAbilityCollection.GetEnum(), customAbilityCollection);
-            CustomAbilityAssetDictionary.Add(customAbilityCollection.GetEnum(), customAbilityCollection.GetAsset());
             // AbilityConstants.abilityCollections.Add(customAbilityCollection.GetEnum(), customAbilityCollection.GetAbilityCollection());
         }
 
@@ -114,10 +111,21 @@ namespace Zeprus.Sap {
             [HarmonyPatch(typeof(MinionLibrary), "Get")]
             public static bool prefixMinionLibraryGet(MinionEnum value, ref MinionAsset __result) {
                 // check if requested Assets are for a custom pet
-                if(CustomMinionAssetDictionary.ContainsKey(value)) {
+                if(CustomPetDictionary.ContainsKey(value)) {
                     // set return to our created MinionAsset
-                    __result = CustomMinionAssetDictionary[value];
+                    __result = CustomPetDictionary[value].GetAsset();
                     // prevent executing the regular MinionLibrary.Get function to avoid errors
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(Spacewood.Unity.Extensions.MinionEnumExtensions), "ToAsset")]
+            public static bool prefixAbilityEnumExtensionsToAsset(MinionEnum minion, ref MinionAsset __result) {
+                if(CustomPetDictionary.ContainsKey(minion)) {
+                    __result = CustomPetDictionary[minion].GetAsset();
                     return false;
                 } else {
                     return true;
@@ -127,8 +135,8 @@ namespace Zeprus.Sap {
             [HarmonyPrefix]
             [HarmonyPatch(typeof(AbilityLibrary), "Get")]
             public static bool prefixAbilityLibraryGet(AbilityEnum value, ref AbilityAsset __result) {
-                if(CustomAbilityAssetDictionary.ContainsKey(value)) {
-                    __result = CustomAbilityAssetDictionary[value];
+                if(CustomAbilityCollectionDictionary.ContainsKey(value)) {
+                    __result = CustomAbilityCollectionDictionary[value].GetAsset();
                     return false;
                 }
                 return true;
@@ -139,6 +147,17 @@ namespace Zeprus.Sap {
             public static bool prefixAbilityConstantsGetAbility(AbilityEnum @enum, int level, ref Ability __result) {
                 if(CustomAbilityCollectionDictionary.ContainsKey(@enum)) {
                     __result = CustomAbilityCollectionDictionary[@enum].GetAbilityCollection().GetAbility(level);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(Spacewood.Unity.Extensions.AbilityEnumExtensions), "ToAsset")]
+            public static bool prefixAbilityEnumExtensionsToAsset(AbilityEnum ability, ref AbilityAsset __result) {
+                if(CustomAbilityCollectionDictionary.ContainsKey(ability)) {
+                    __result = CustomAbilityCollectionDictionary[ability].GetAsset();
                     return false;
                 } else {
                     return true;
