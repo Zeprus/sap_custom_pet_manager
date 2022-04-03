@@ -17,8 +17,6 @@ Build the project with 'dotnet publish' for automatic deployment.
 If you are running into unresolved references during build you most likely did not configure the GameDir correctly or forgot to run BepInEx once.
 
 ## TODO:
-- Implement help with abilities
-  - fix ability-assets when hovering over the pet
 - Implement custom packs
 - Implement overwriting or deleting pets
 - Implement help with Assets
