@@ -18,9 +18,9 @@ namespace Zeprus.Sap {
         }
 
         #region CustomPet
-        public static CustomPet CreateCustomPet(string name) {
+        public static CustomPet CreateCustomPet(string name, int tier) {
             MinionEnum minionEnum = createMinionEnum();
-            MinionTemplate minionTemplate = createMinionTemplate(minionEnum, name);
+            MinionTemplate minionTemplate = createMinionTemplate(minionEnum, name, tier);
             MinionAsset minionAsset = createMinionAsset(minionEnum, name);
             CustomPet customPet = new CustomPet(minionEnum, minionTemplate, minionAsset);
             registerPet(customPet);
@@ -31,8 +31,8 @@ namespace Zeprus.Sap {
             return (MinionEnum) (Enum.GetNames(typeof(MinionEnum)).Length + CustomPetDictionary.Count + 1);
         }
 
-        private static MinionTemplate createMinionTemplate(MinionEnum minionEnum, string name) {
-            MinionTemplate minionTemplate = new MinionTemplate(minionEnum);
+        private static MinionTemplate createMinionTemplate(MinionEnum minionEnum, string name, int tier) {
+            MinionTemplate minionTemplate = MinionConstants.CreateMinion(minionEnum, tier);
             minionTemplate.Enum = minionEnum;
             minionTemplate.Name = name;
             minionTemplate.SetStats(1, 1);
@@ -49,7 +49,6 @@ namespace Zeprus.Sap {
         }
 
         private static void registerPet(CustomPet customPet) {
-            MinionConstants.Minions.Add(customPet.GetEnum(), customPet.GetTemplate());
             CustomPetDictionary.Add(customPet.GetEnum(), customPet);
             log.LogInfo("Created custom pet '" + customPet.GetTemplate().Name + "' with ID " + customPet.GetEnum());
         }
